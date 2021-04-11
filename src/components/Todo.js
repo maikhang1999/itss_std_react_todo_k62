@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 /* 
   【Todoのデータ構成】
@@ -19,27 +19,77 @@ import useStorage from '../hooks/storage';
 import {getKey} from "../lib/util";
 
 function Todo() {
-  const [items, putItems] = React.useState([
-      /* テストコード 開始 */
-    { key: getKey(), text: '日本語の宿題', done: false },
-    { key: getKey(), text: 'reactを勉強する', done: false },
-    { key: getKey(), text: '明日の準備をする', done: false },
-    /* テストコード 終了 */
-  ]);
+  const [items, putItems, clearItems] = useStorage(); 
+  const [filterItems, setFilterItems] = useState([]);
+  
+  useEffect(() => {
+    setFilterItems(items);
+  }, [items]);
+  
+  const handleOnItemClick = (newItem) => {
+    let newItems = [];
+    
+    for (const item of items) {
+      if (item.key === newItem.key) {
+        newItem.done = !newItem.done;
+        newItems.push(newItem);
+      }
+      else {
+        newItems.push(item);
+      }
+    }
+    
+    putItems(newItems);
+  }
+  
+  const handleOnEnterInput = (newItem) => {
+    putItems([
+      ...items,
+      {
+        key: getKey(),
+        text: newItem,
+        done: false,
+      },
+    ])
+  }
+  
+  const handleOnFilterClick = (element) => {
+    if (element.text === "未完了") {
+      setFilterItems(items.filter((item) => item.done === false));
+    }
+    else if (element.text === "完了済み") {
+      setFilterItems(items.filter((item) => item.done === true));
+    }
+    else {
+      setFilterItems(items);
+    }
+  }
+  
+  const handleDeleteItems = () => {
+    clearItems();
+  }
 
   return (
     <div className="panel">
       <div className="panel-heading">
         ITSS ToDoアプリ
       </div>
-      {items.map(item => (
-        <label className="panel-block">
-            <input type="checkbox" />
-            {item.text}
-        </label>
+      <Input onEnterInput={handleOnEnterInput} />
+      <Filter onFilterClick={handleOnFilterClick} />
+      {filterItems.map(item => (
+        <TodoItem 
+          key={item.key}
+          item={item} 
+          onItemClick={handleOnItemClick} 
+        />
       ))}
       <div className="panel-block">
-        {items.length} items
+        {filterItems.length} items
+      </div>
+      <div className="panel-delete has-text-centered">
+        <button className="button is-danger" onClick={handleDeleteItems}>
+          全てのTodoを削除
+        </button>
       </div>
     </div>
   );
