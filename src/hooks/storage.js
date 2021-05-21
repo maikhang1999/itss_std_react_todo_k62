@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-
+import db from '../lib/firebase';
 /* 
   【Storageフック】
 　・TodoをlocalStorageを使って保存する
@@ -18,8 +18,15 @@ function useStorage() {
 　
 　/* 副作用を使う */
   useEffect(() => {
-    const savedItems = JSON.parse(localStorage.getItem("todoItems"));
-    if (savedItems) setItems(savedItems);
+    const savedItems = [];
+
+    db.collection("todos").onSnapshot(snapshot => {
+      setItems(snapshot.docs.map(doc => ({
+        key: doc.id,
+        text: doc.data().text,
+        done: doc.data().done,
+      })));
+    });
   }, []);
 
   const putItems = items => {
