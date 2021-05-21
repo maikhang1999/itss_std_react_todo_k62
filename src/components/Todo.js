@@ -19,7 +19,7 @@ import useStorage from '../hooks/storage';
 import {getKey} from "../lib/util";
 
 function Todo() {
-  const [items, putItems, clearItems] = useStorage(); 
+  const [items, addItem, updateItem, clearItems] = useStorage(); 
   const [filterItems, setFilterItems] = useState([]);
   
   useEffect(() => {
@@ -27,30 +27,11 @@ function Todo() {
   }, [items]);
   
   const handleOnItemClick = (newItem) => {
-    let newItems = [];
-    
-    for (const item of items) {
-      if (item.key === newItem.key) {
-        newItem.done = !newItem.done;
-        newItems.push(newItem);
-      }
-      else {
-        newItems.push(item);
-      }
-    }
-    
-    putItems(newItems);
+    updateItem(newItem)
   }
   
   const handleOnEnterInput = (newItem) => {
-    putItems([
-      ...items,
-      {
-        key: getKey(),
-        text: newItem,
-        done: false,
-      },
-    ])
+    addItem(newItem);
   }
   
   const handleOnFilterClick = (element) => {

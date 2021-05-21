@@ -11,7 +11,7 @@ import db from '../lib/firebase';
 
 /* global localStorage */
 
-const STORAGE_KEY = 'itss-todo';
+const STORAGE_KEY = 'todos';
 
 function useStorage() {
   const [items, setItems] = useState([]);
@@ -20,7 +20,7 @@ function useStorage() {
   useEffect(() => {
     const savedItems = [];
 
-    db.collection("todos").onSnapshot(snapshot => {
+    db.collection(STORAGE_KEY).onSnapshot(snapshot => {
       setItems(snapshot.docs.map(doc => ({
         key: doc.id,
         text: doc.data().text,
@@ -28,18 +28,28 @@ function useStorage() {
       })));
     });
   }, []);
+  const addItem = async item => {
+    await db.collection(STORAGE_KEY).add({
+      text: item,
+      done: false,
+    });
+  }
 
-  const putItems = items => {
-    setItems(items);
-    localStorage.setItem("todoItems", JSON.stringify(items));
+  const updateItem = async item => {
+    const updatedItem = db.collection(STORAGE_KEY).doc(item.key);
+    await updatedItem.update({
+      done: !item.done,
+    });
   };
-
-  const clearItems = () => {
-    setItems([]);
-    localStorage.setItem("todoItems", JSON.stringify([]));
-  };
-
-  return [items, putItems, clearItems];
+  const clearItems = async () => {
+    const allItems = await db.collection(STORAGE_KEY).get();
+    const batch = db.batch();
+    allItems.forEach(item => {
+      batch.delete(item.ref);
+    });
+    await batch.commit();
+  }
+  return [items, addItem, updateItem, clearItems];
 }
 
 export default useStorage;
