@@ -7,10 +7,11 @@ const firebaseConfig = {
   messagingSenderId: "616186546199",
   appId: "1:616186546199:web:2fc9b50e45a210ead8b452"
 };
-const firebaseApp = firebase.initializeApp(firebaseConfig);
-const db = firebaseApp.firestore();
+firebase.initializeApp(firebaseConfig);
+export const db = firebase.firestore();
 export const auth = firebase.auth();
 export default firebase;
+
 export const uiConfig = {
   signInFlow: 'popup',
   signInSuccessUrl: "/",
@@ -18,6 +19,7 @@ export const uiConfig = {
     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
   ],
 }
+
 export const storeUserInfo = async (user) => {
   const { uid } = user;
   const userDoc = await db.collection("users").doc(uid).get();
@@ -45,3 +47,14 @@ export const updateUser = async (user, image) => {
     console.log(err);
   }
 }
+export const uploadImage = async (image) => {
+  const ref = firebase.storage().ref().child(`/images/${image.name}`);
+  let downloadUrl = "";
+  try {
+    await ref.put(image);
+    downloadUrl = await ref.getDownloadURL();
+  } catch (err) {
+    console.log(err);
+  }
+  return downloadUrl;
+};
